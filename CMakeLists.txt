@@ -11,9 +11,6 @@ SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -g2 -ggdb")
 #SET(CMAKE_CXX_STANDARD 14)
 
 find_package(ROOT REQUIRED)
-# find_package(ROOT COMPONENTS RooFit RooFitCore Minuit REQUIRED)
-#set(PLOTTOOL_INCLUDE_DIR /home/ylliu/downloads/PlotTool/include)
-#set(PLOTTOOL_LINK_DIR /home/ylliu/downloads/PlotTool/dylib)
 
 include_directories(${PROJECT_SOURCE_DIR}/include ${ROOT_INCLUDE_DIR})
 #link_directories(${PLOTTOOL_LINK_DIR})
