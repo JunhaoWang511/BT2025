@@ -79,68 +79,6 @@ double langaufun(Double_t *x, Double_t *par)
     return (par[2] * step * sum * invsq2pi / par[3]);
 }
 
-void langaufit(TH1F *his)
-{
-    // Once again, here are the Landau * Gaussian parameters:
-    //   par[0]=Width (scale) parameter of Landau density
-    //   par[1]=Most Probable (MP, location) parameter of Landau density
-    //   par[2]=Total area (integral -inf to inf, normalization constant)
-    //   par[3]=Width (sigma) of convoluted Gaussian function
-    //
-    // Variables for langaufit call:
-    //   his             histogram to fit
-    //   startvalues[4]  reasonable start values for the fit
-    //   parlimitslo[4]  lower parameter limits
-    //   parlimitshi[4]  upper parameter limits
-
-    if (his->GetEntries() < 500)
-        return;
-    TFitResultPtr fit_res;
-    int binMax, binLeft, binRight;
-    double LeftthresholdValue, RightthresholdValue, LeftValue, RightValue, LeftleftValue, Rightrightvalue;
-    // determine fitting range
-    binMax = his->GetMaximumBin();
-    LeftthresholdValue = his->GetBinContent(binMax) / 4;
-    RightthresholdValue = his->GetBinContent(binMax) / 8;
-    binLeft = binRight = binMax;
-    do
-    {
-        LeftValue = his->GetBinContent(binLeft);
-        RightValue = his->GetBinContent(binRight);
-        LeftleftValue = his->GetBinContent(binLeft - 1);
-        Rightrightvalue = his->GetBinContent(binRight - 1);
-        if (LeftValue > LeftthresholdValue || LeftleftValue > LeftthresholdValue)
-            binLeft--;
-        if (RightValue > RightthresholdValue || Rightrightvalue > RightthresholdValue)
-            binRight++;
-        if (binLeft == 0 || binRight == his->GetNbinsX())
-            break;
-    } while (LeftValue > LeftthresholdValue || RightValue > RightthresholdValue || LeftleftValue > LeftthresholdValue || Rightrightvalue > RightthresholdValue);
-
-    // start values, parameter lower limits, parameter upper limits
-    double StdDev, MaxPos, Area, Sigma;
-    StdDev = his->GetStdDev();
-    MaxPos = his->GetMaximumBin() * his->GetBinWidth(0);
-    Area = his->Integral("width");
-    double startvalues[4] = {StdDev, MaxPos, Area, 1}, parlimitslo[4] = {StdDev * 0.001, MaxPos * 0.1, Area * 0.01, 0.01}, parlimitshi[4] = {StdDev, MaxPos * 10, Area * 100, 100};
-
-    TString FunName = "lan_gaus_conv";
-    TF1 *ffitold = (TF1 *)gROOT->GetListOfFunctions()->FindObject(FunName);
-    if (ffitold)
-        delete ffitold;
-
-    TF1 *ffit = new TF1(FunName.Data(), langaufun, his->GetBinCenter(binMax - 50), his->GetBinCenter(binMax + 150), 4);
-    ffit->SetParameters(startvalues);
-    ffit->SetParNames("Width", "MP", "Area", "GSigma");
-
-    for (int i = 0; i < 4; i++)
-    {
-        ffit->SetParLimits(i, parlimitslo[i], parlimitshi[i]);
-    }
-
-    fit_res = his->Fit(FunName, "QS RB"); // fit within specified range, use ParLimits
-}
-
 void Draw5x5MIPSpectra(TString rootname)
 {
     gStyle->SetOptStat(0000);
@@ -170,16 +108,16 @@ void Draw5x5MIPSpectra(TString rootname)
     Int_t Nentries = (Int_t)tr->GetEntries();
 
     DataModel2025 hit[25];
-    TH1F *HGMip_his[25];
+    TH1F *HGMip_his[25], *LGMip_his[25];
 
     for (int i = 0; i < 5; i++)
         for (int j = 0; j < 5; j++)
         {
             tr->SetBranchAddress(Form("Hit_%d_%d", i + 1, j + 1), &hit[5 * i + j]);
-            HGMip_his[5 * i + j] = new TH1F(Form("MIPSpectrum_%d_%d", i + 1, j + 1), Form("his%d;ADC value;counts", 5 * i + j), 200, 4000, 14000);
-            // HGMip_his[5 * i + j] = new TH1F(Form("MIPSpectrum_%d_%d", i + 1, j + 1), Form("his%d;ADC value;counts", 5 * i + j), 200, 500, 1500);
+            HGMip_his[5 * i + j] = new TH1F(Form("HGMIPSpectrum_%d_%d", i + 1, j + 1), Form("his%d;ADC value;counts", 5 * i + j), 200, 4000, 14000);
+            LGMip_his[5 * i + j] = new TH1F(Form("LGMIPSpectrum_%d_%d", i + 1, j + 1), Form("his%d;ADC value;counts", 5 * i + j), 200, 400, 1400);
         }
-    double energycut = 2000, peak, temp;
+    double energycut = 2000, peakHG, peakLG, tempHG, tempLG;
     int channel, chcount, process;
     for (int n = 0; n < Nentries; n++)
     {
@@ -192,66 +130,91 @@ void Draw5x5MIPSpectra(TString rootname)
         tr->GetEntry(n);
         chcount = 0;
         channel = -1;
-        temp = 0;
+        tempHG = 0;
+        tempLG = 0;
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 5; j++)
             {
                 int ch = 5 * i + j;
-                // temp = hit[ch].LowGainPeak - hit[ch].LowGainPedestal;
-                temp = hit[ch].HighGainPeak - hit[ch].HighGainPedestal;
-                if (temp > energycut)
+                tempLG = hit[ch].LowGainPeak - hit[ch].LowGainPedestal;
+                tempHG = hit[ch].HighGainPeak - hit[ch].HighGainPedestal;
+                if (tempHG > energycut)
                 {
                     chcount++;
                     channel = ch;
-                    // peak = hit[ch].HighGainPeak;
-                    peak = temp;
+                    peakLG = tempLG;
+                    peakHG = tempHG;
                 }
             }
         if (chcount != 1)
             continue;
         else
         {
-            if (peak > HGMip_his[channel]->GetBinCenter(0) && peak < HGMip_his[channel]->GetBinCenter(HGMip_his[channel]->GetNbinsX()))
-                HGMip_his[channel]->Fill(peak);
+            if (peakHG > HGMip_his[channel]->GetBinCenter(0) && peakHG < HGMip_his[channel]->GetBinCenter(HGMip_his[channel]->GetNbinsX()))
+                HGMip_his[channel]->Fill(peakHG);
+            if (peakLG > LGMip_his[channel]->GetBinCenter(0) && peakLG < LGMip_his[channel]->GetBinCenter(LGMip_his[channel]->GetNbinsX()))
+                LGMip_his[channel]->Fill(peakLG);
         }
     }
     std::cout << std::endl;
 
-    double MPV[25], Peak[25];
-    TCanvas *can = new TCanvas("cMipSpectra", "canvas", 1600, 900);
-    can->Divide(5, 5);
-    double par[4] = {1000, 800, 10000, 10};
+    double MPVHG[25], PeakHG[25];
+    double MPVLG[25], PeakLG[25];
+    TCanvas *canHG = new TCanvas("HGMipSpectra", "canvas", 1600, 900);
+    canHG->Divide(5, 5);
+    TCanvas *canLG = new TCanvas("LGMipSpectra", "canvas", 1600, 900);
+    canLG->Divide(5, 5);
+    double parHG[4] = {1000, 8000, 10000, 50};
+    double parLG[4] = {100, 800, 1000, 5};
     for (int i = 0; i < 5; i++)
         for (int j = 0; j < 5; j++)
         {
-            can->cd(21 + i - 5 * j);
+            TF1 *ff = new TF1("lan_gaus_conv", langaufun, 0, 20000, 4);
+            canHG->cd(21 + i - 5 * j);
             HGMip_his[5 * i + j]->Draw();
-            TF1 *ff = new TF1("lan_gaus_conv", langaufun, HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1) - 1000, HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1) + 4000, 4);
-            par[1] = HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1);
-            ff->SetParameters(par);
-            HGMip_his[5 * i + j]->Fit(ff, "QR");
-            // langaufit(HGMip_his[5 * i + j]);
+            parHG[1] = HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1);
+            ff->SetParameters(parHG);
+            HGMip_his[5 * i + j]->Fit(ff, "QR", "", HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1) - 1000, HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1) + 4000);
             if (HGMip_his[5 * i + j]->GetFunction("lan_gaus_conv"))
-                MPV[5 * i + j] = HGMip_his[5 * i + j]->GetFunction("lan_gaus_conv")->GetMaximumX();
-            Peak[5 * i + j] = HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1);
-            HGMip_his[5 * i + j]->GetXaxis()->SetRangeUser(Peak[5 * i + j] - 2 * HGMip_his[5 * i + j]->GetRMS(), Peak[5 * i + j] + 5 * HGMip_his[5 * i + j]->GetRMS());
+                MPVHG[5 * i + j] = HGMip_his[5 * i + j]->GetFunction("lan_gaus_conv")->GetMaximumX();
+            PeakHG[5 * i + j] = HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1);
+            HGMip_his[5 * i + j]->GetXaxis()->SetRangeUser(PeakHG[5 * i + j] - 2 * HGMip_his[5 * i + j]->GetRMS(), PeakHG[5 * i + j] + 5 * HGMip_his[5 * i + j]->GetRMS());
             HGMip_his[5 * i + j]->GetYaxis()->SetRangeUser(0, HGMip_his[5 * i + j]->GetMaximum() * 1.2);
+
+            canLG->cd(21 + i - 5 * j);
+            LGMip_his[5 * i + j]->Draw();
+            parLG[1] = LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1);
+            ff->SetParameters(parLG);
+            LGMip_his[5 * i + j]->Fit(ff, "QR", "", LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1) - 100, LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1) + 400);
+            if (LGMip_his[5 * i + j]->GetFunction("lan_gaus_conv"))
+                MPVLG[5 * i + j] = LGMip_his[5 * i + j]->GetFunction("lan_gaus_conv")->GetMaximumX();
+            PeakLG[5 * i + j] = LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1);
+            LGMip_his[5 * i + j]->GetXaxis()->SetRangeUser(PeakLG[5 * i + j] - 2 * LGMip_his[5 * i + j]->GetRMS(), PeakLG[5 * i + j] + 5 * LGMip_his[5 * i + j]->GetRMS());
+            LGMip_his[5 * i + j]->GetYaxis()->SetRangeUser(0, LGMip_his[5 * i + j]->GetMaximum() * 1.2);
         }
     TFile *fout = new TFile("./5x5MIP-" + filename + ".root", "RECREATE");
     fout->cd();
-    can->Write();
+    canHG->Write();
+    canLG->Write();
     for (int i = 0; i < 25; i++)
     {
         HGMip_his[i]->Write();
+        LGMip_his[i]->Write();
     }
     fout->Close();
     std::ofstream outfile("MIPpeak.txt");
-    outfile << "MIP peak value:\n";
+    outfile << "HG MIP peak value:\n";
     for (int i = 0; i < 25; i++)
-        outfile << Peak[i] << ", ";
-    outfile << "\nMIP MPV value:\n";
+        outfile << PeakHG[i] << ", ";
+    outfile << "\nHG MIP peak fit value:\n";
     for (int i = 0; i < 25; i++)
-        outfile << MPV[i] << ", ";
+        outfile << MPVHG[i] << ", ";
+    outfile << "\nLG MIP peak value:\n";
+    for (int i = 0; i < 25; i++)
+        outfile << PeakLG[i] << ", ";
+    outfile << "\nLG MIP peak fit value:\n";
+    for (int i = 0; i < 25; i++)
+        outfile << MPVLG[i] << ", ";
     outfile.close();
     std::cout << "generate root file: " << "./5x5MIP-" + filename + ".root" << ", and parameter file: MIPpeak.txt" << std::endl;
 }
