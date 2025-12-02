@@ -27,8 +27,8 @@ pushd ${SCRIPT_DIR}/data/${DATENAME} >/dev/null
 # 数据处理程序路径
 DECODE_DIR=${SCRIPT_DIR}/../../build
 
-# 解码文件生成raw.root
-if [ ! -f "raw.root" ]; then
+# 解码文件生成decode.root
+if [ ! -f "decode.root" ]; then
   # 判断是否生成解码程序
   if [ ! -f "${DECODE_DIR}/ECALdig2root2025" ]; then
     echo "Decode programe dose not exist!"
@@ -39,36 +39,56 @@ if [ ! -f "raw.root" ]; then
     DATAFILEPATH=/data/DAQ/Beam_2510/$DATAFILEPATH
   fi
   # 拷贝DAQ服务器的数据到本地，跳过已有文件
-  ssh "lunon@192.168.7.150" "find '$DATAFILEPATH' -type f" |
-    while read -r temp; do
-      if [[ "$(basename $temp)" == data*ECAL*.dat ]]; then
-        # 后台拷贝文件和解码
-        dataname=$(basename $temp)
-        rsync -h --ignore-existing --progress lunon@192.168.7.150:${DATAFILEPATH}/${dataname} .
-        ${DECODE_DIR}/ECALdig2root2025 ${dataname} ${dataname%.dat}.root
-        ((i++))
-        if [[ (-n $FILENUMBER) && ($i -eq $FILENUMBER) ]]; then
-          break
-        fi
+  ssh "lunon@192.168.7.150" "find '$DATAFILEPATH' -type f" >list.txt
+  while read -r temp; do
+    if [[ "$(basename $temp)" == data*ECAL*.dat ]]; then
+      # 后台拷贝文件和解码
+      dataname=$(basename $temp)
+      rsync -h --ignore-existing --progress lunon@192.168.7.150:${DATAFILEPATH}/${dataname} .
+      ${DECODE_DIR}/ECALdig2root2025 ${dataname} ${dataname%.dat}_decode.root >/dev/null 2>&1 &
+      ((i++))
+      if [[ (-n $FILENUMBER) && ($i -eq $FILENUMBER) ]]; then
+        break
       fi
-    done
+    fi
+  done <list.txt
+  rm list.txt
   # 等待后台程序执行完毕
-  # wait
-  hadd raw.root data*ECAL*.root
-  echo "generate $(pwd)/raw.root"
-  # 移除中间数据文件
-  rm data*ECAL*
+  echo "wait decode processing..."
+  wait
+  hadd decode.root data*ECAL*.root
+  echo "generate $(pwd)/decode.root"
 fi
 
 # 数字化和重建
 if [ ! -f 'digi.root' ]; then
-  ${DECODE_DIR}/ECALDigi $(pwd)/raw.root digi.root
+  realpath data*ECAL*decode.root >list.txt
+  while read -r temp; do
+    dataname=$(basename $temp)
+    ${DECODE_DIR}/ECALDigi ${dataname} ${dataname%_decode.root}_digi.root >/dev/null 2>&1 &
+  done <list.txt
+  rm list.txt
+  # 等待后台程序执行完毕
+  echo "wait digitization processing..."
+  wait
+  hadd digi.root data*ECAL*digi.root
   echo "generate $(pwd)/digi.root"
 fi
 if [ ! -f "rec.root" ]; then
-  ${DECODE_DIR}/Reconstruction $(pwd)/digi.root rec.root
+  realpath data*ECAL*digi.root >list.txt
+  while read -r temp; do
+    dataname=$(basename $temp)
+    ${DECODE_DIR}/Reconstruction ${dataname} ${dataname%_digi.root}_rec.root >/dev/null 2>&1 &
+  done <list.txt
+  rm list.txt
+  # 等待后台程序执行完毕
+  echo "wait reconstruction processing..."
+  wait
+  hadd rec.root data*ECAL*rec.root
   echo "generate $(pwd)/rec.root"
 fi
+# 移除中间数据文件
+rm data*ECAL*
 
 # echo "fit electron energy spectrum"
 # ${SCRIPT_DIR}/DrawEnergy rec.root
