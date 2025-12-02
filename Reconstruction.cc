@@ -95,9 +95,9 @@ int main(int argc, char const *argv[])
 
   TFile *f = new TFile(outputfile.Data(), "recreate");
 
-  bool IsFitAmp = false;
+  bool IsFitAmp = true;
   if (argc == 4)
-    IsFitAmp = true;
+    IsFitAmp = false;
 
   int triggerID;
   vector<int> HitID;
@@ -236,11 +236,6 @@ int main(int argc, char const *argv[])
     m_Hit2Cluster.Convert(HitMap, ClusterMap);
     Cluster2Shower m_Cluster2Shower;
     m_Cluster2Shower.Convert(ClusterMap, ShowerMap);
-
-    /*SeedFinder m_SeedFinder;
-      Citer=ClusterMap.begin();
-      m_SeedFinder.Seed(Citer->second,SeedIDVec);
-      for(int i=0;i<SeedIDVec.size();i++) cout<<"Seed:"<<SeedIDVec.at(i)<<endl;*/
 
     double epsilon = 1e-10;
     for (Citer = ClusterMap.begin(); Citer != ClusterMap.end(); Citer++)

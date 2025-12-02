@@ -62,7 +62,7 @@ void RecHit::setEnergy(const double hgamp, const double lgamp, const double rati
   else
   {
     if (lgamp < 3 * lgnoise)
-      m_Energy == 0;
+      m_Energy = 0;
     else
       m_Energy = lgamp * ratio / (hgmip - hgpedestal) * 168;
   }
@@ -85,15 +85,7 @@ void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ra
     if (m_Energy < 3 * hgnoise)
       m_Energy = 0;
     else
-      m_Energy = (m_Energy / ratio) / (lgmip - lgpedestal) * 168;
-    // else m_Energy=m_Energy/(hgmip-hgpedestal)*168;
-    // else {
-    //   double weightlg = 1.0/lgnoise/lgnoise/ratio/ratio;
-    //   double weighthg = 1.0/hgnoise/hgnoise;
-    //   m_Energy = (m_Energy*weighthg + (lgpeak-lgpedestal)*ratio*weightlg)/(weighthg+weightlg);
-    //   m_Energy = m_Energy/(hgmip-hgpedestal)*168;
-    // }
-    // else m_Energy=(m_Energy/ratio)/(lgmip-lgpedestal)*r1.Gaus(168,3);
+      m_Energy = m_Energy / (hgmip - hgpedestal) * 168;
   }
   else
   {
@@ -101,15 +93,8 @@ void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ra
     if (m_Energy < 3 * lgnoise)
       m_Energy = 0;
     else
-      m_Energy = m_Energy / (lgmip - lgpedestal) * 168;
-    // else m_Energy=m_Energy*ratio/(hgmip-hgpedestal)*168;
-    // else m_Energy=m_Energy/(lgmip-lgpedestal)*r1.Gaus(168,3);
+      m_Energy = m_Energy * ratio / (hgmip - hgpedestal) * 168;
   }
-
-  /*m_Energy=lgpeak-lgpedestal;
-  if(m_Energy<3*lgnoise) m_Energy=0;
-  else m_Energy=m_Energy/(lgmip-lgpedestal)*168;*/
-  // else m_Energy=m_Energy/(lgmip-lgpedestal)*r1.Gaus(168,3);
 }
 
 void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ratio, const double hgsatupoint, const double hgnoise, const double lgpedestal, const double lgnoise, const double lgmip, const double hgmip)
