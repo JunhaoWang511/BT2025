@@ -77,8 +77,8 @@ void Draw5x5NoiseTempGratio(TString rootname)
   for (int i = 0; i < 5; i++)
     for (int j = 0; j < 5; j++)
     {
-      hTemp1[i][j] = new TH1F(Form("temp1_%d_%d", i + 1, j + 1), Form("temp1_%d_%d;tempreture/{}^{o}C;counts", i + 1, j + 1), 1000, 0, 100);
-      hTemp2[i][j] = new TH1F(Form("temp2_%d_%d", i + 1, j + 1), Form("temp2_%d_%d;tempreture/{}^{o}C;counts", i + 1, j + 1), 1000, 0, 100);
+      hTemp1[i][j] = new TH1F(Form("temp1_%d_%d", i + 1, j + 1), Form("temp1_%d_%d;tempreture/{}^{o}C;counts", i + 1, j + 1), 10000, 0, 100);
+      hTemp2[i][j] = new TH1F(Form("temp2_%d_%d", i + 1, j + 1), Form("temp2_%d_%d;tempreture/{}^{o}C;counts", i + 1, j + 1), 10000, 0, 100);
       hLNoise[i][j] = new TH1F(Form("LGnoise_%d_%d", i + 1, j + 1), Form("LGnoise_%d_%d;ADC value;counts", i + 1, j + 1), 1000, 2000, 3000);
       hHNoise[i][j] = new TH1F(Form("HGnoise_%d_%d", i + 1, j + 1), Form("HGnoise_%d_%d;ADC value;counts", i + 1, j + 1), 1000, 2000, 3000);
       gHLratio[i][j] = new TGraph();
@@ -273,13 +273,7 @@ void Draw5x5NoiseTempGratio(TString rootname)
   }
   fout->Close();
   std::ofstream outfile("parameters.txt");
-  outfile << "temperature1:\n";
-  for (int i = 0; i < 25; i++)
-    outfile << temperature1[i] << ", ";
-  outfile << "\ntemperature2:\n";
-  for (int i = 0; i < 25; i++)
-    outfile << temperature2[i] << ", ";
-  outfile << "\nHGpedestal:\n";
+  outfile << "HGpedestal:\n";
   for (int i = 0; i < 25; i++)
     outfile << HGpedestal[i] << ", ";
   outfile << "\nLGpedestal:\n";
@@ -294,6 +288,12 @@ void Draw5x5NoiseTempGratio(TString rootname)
   outfile << "\ngain ratio:\n";
   for (int i = 0; i < 25; i++)
     outfile << ratio[i] << ", ";
+  outfile << "\ntemperature1:\n";
+  for (int i = 0; i < 25; i++)
+    outfile << temperature1[i] << ", ";
+  outfile << "\ntemperature2:\n";
+  for (int i = 0; i < 25; i++)
+    outfile << temperature2[i] << ", ";
   outfile.close();
   std::cout << "generate root file: " << "./5x5Noise-" + filename + ".root" << ", and parameter file: parameter.txt" << std::endl;
 }

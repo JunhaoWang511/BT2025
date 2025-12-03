@@ -160,23 +160,29 @@ void Draw5x5MIPSpectra(TString rootname)
 
     double MPVHG[25], PeakHG[25];
     double MPVLG[25], PeakLG[25];
-    TCanvas *canHG = new TCanvas("HGMipSpectra", "canvas", 1600, 900);
+    TCanvas *canHG = new TCanvas("HGMIPSpectra", "canvas", 1600, 900);
     canHG->Divide(5, 5);
-    TCanvas *canLG = new TCanvas("LGMipSpectra", "canvas", 1600, 900);
+    TCanvas *canLG = new TCanvas("LGMIPSpectra", "canvas", 1600, 900);
     canLG->Divide(5, 5);
-    double parHG[4] = {1000, 8000, 10000, 50};
-    double parLG[4] = {100, 800, 1000, 5};
     for (int i = 0; i < 5; i++)
         for (int j = 0; j < 5; j++)
         {
+            double parHG[4] = {1000, 8000, 10000, 100};
+            double parLG[4] = {100, 800, 1000, 10};
             TF1 *ff = new TF1("lan_gaus_conv", langaufun, 0, 20000, 4);
             canHG->cd(21 + i - 5 * j);
             HGMip_his[5 * i + j]->Draw();
             parHG[1] = HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1);
-            ff->SetParameters(parHG);
-            HGMip_his[5 * i + j]->Fit(ff, "QR", "", HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1) - 1000, HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1) + 4000);
+            for (int t = 0; t < 10; t++)
+            {
+                ff->SetParameters(parHG);
+                HGMip_his[5 * i + j]->Fit(ff, "QR", "", HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1) - 1000, HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1) + 4000);
+                HGMip_his[5 * i + j]->GetFunction("lan_gaus_conv")->GetParameters(parHG);
+            }
             if (HGMip_his[5 * i + j]->GetFunction("lan_gaus_conv"))
+            {
                 MPVHG[5 * i + j] = HGMip_his[5 * i + j]->GetFunction("lan_gaus_conv")->GetMaximumX();
+            }
             PeakHG[5 * i + j] = HGMip_his[5 * i + j]->GetMaximumBin() * HGMip_his[5 * i + j]->GetBinWidth(0) + HGMip_his[5 * i + j]->GetBinLowEdge(1);
             HGMip_his[5 * i + j]->GetXaxis()->SetRangeUser(PeakHG[5 * i + j] - 2 * HGMip_his[5 * i + j]->GetRMS(), PeakHG[5 * i + j] + 5 * HGMip_his[5 * i + j]->GetRMS());
             HGMip_his[5 * i + j]->GetYaxis()->SetRangeUser(0, HGMip_his[5 * i + j]->GetMaximum() * 1.2);
@@ -184,10 +190,16 @@ void Draw5x5MIPSpectra(TString rootname)
             canLG->cd(21 + i - 5 * j);
             LGMip_his[5 * i + j]->Draw();
             parLG[1] = LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1);
-            ff->SetParameters(parLG);
-            LGMip_his[5 * i + j]->Fit(ff, "QR", "", LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1) - 100, LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1) + 400);
+            for (int t = 0; t < 10; t++)
+            {
+                ff->SetParameters(parLG);
+                LGMip_his[5 * i + j]->Fit(ff, "QR", "", LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1) - 100, LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1) + 400);
+                LGMip_his[5 * i + j]->GetFunction("lan_gaus_conv")->GetParameters(parLG);
+            }
             if (LGMip_his[5 * i + j]->GetFunction("lan_gaus_conv"))
+            {
                 MPVLG[5 * i + j] = LGMip_his[5 * i + j]->GetFunction("lan_gaus_conv")->GetMaximumX();
+            }
             PeakLG[5 * i + j] = LGMip_his[5 * i + j]->GetMaximumBin() * LGMip_his[5 * i + j]->GetBinWidth(0) + LGMip_his[5 * i + j]->GetBinLowEdge(1);
             LGMip_his[5 * i + j]->GetXaxis()->SetRangeUser(PeakLG[5 * i + j] - 2 * LGMip_his[5 * i + j]->GetRMS(), PeakLG[5 * i + j] + 5 * LGMip_his[5 * i + j]->GetRMS());
             LGMip_his[5 * i + j]->GetYaxis()->SetRangeUser(0, LGMip_his[5 * i + j]->GetMaximum() * 1.2);
