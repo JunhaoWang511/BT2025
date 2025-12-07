@@ -106,28 +106,33 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
     int trackID;
     double trackPos[3], trackVec[3];
     double xpars[3], ypars[3];
+    double xfitpar[3], yfitpar[3];
     bool useflag;
     // ECAL position along z axis
     double posHit[3];
-    posHit[2] = 8450;
+    posHit[2] = 7800;
     TrTrack->SetBranchAddress("event", &trackID);
     TrTrack->SetBranchAddress("ecalextraHit", &trackPos);
     TrTrack->SetBranchAddress("ecaltrackVec", &trackVec);
     TrTrack->SetBranchAddress("X2345fitPars", xpars);
     TrTrack->SetBranchAddress("Y2345fitPars", ypars);
     TrTrack->SetBranchAddress("ecaluseflag", &useflag);
+    TrTrack->SetBranchAddress("XfitPars", xfitpar);
+    TrTrack->SetBranchAddress("YfitPars", yfitpar);
     for (int i = 0; i < std::min(TrTrack->GetEntries(), TrECAL->GetEntries()); i++)
     {
         TrTrack->GetEntry(i);
         TrECAL->GetEntry(i);
-        posHit[0] = xpars[0] * posHit[2] + xpars[1];
-        posHit[1] = ypars[0] * posHit[2] + ypars[1];
-        if (!(useflag && triggerID == trackID && ShowerX->size() == 1 && SeedID->at(0) == 326034 && Energy_5x5->at(0) > 900))
+        posHit[0] = xpars[0] * posHit[2] + xpars[1] + 4.72;
+        posHit[1] = ypars[0] * posHit[2] + ypars[1] + 3.14;
+        if (!(useflag && triggerID == trackID && ShowerX->size() == 1 && SeedID->at(0) == 326034 && Energy_5x5->at(0) > energy_cut))
             continue;
-        // if (!(fabs(posHit[0] + 10) < 10 && fabs(posHit[1]) < 10))
+        // if (!(fabs(xfitpar[2] - 1) < 1e-5 && fabs(yfitpar[2] - 1) < 1e-6))
         //     continue;
-        // if (!(fabs(ShowerX->at(0) * 10) < 20 && fabs(ShowerY->at(0) * 10) < 20))
+        // if (fabs(xpars[0]) > 2e-3 || fabs(ypars[0]) > 2e-3)
         //     continue;
+        if (!(fabs(posHit[0]) < 25 && fabs(posHit[1]) < 25))
+            continue;
         // double slope = TMath::Power(TMath::Power(xpars[0], 2) + TMath::Power(ypars[0], 2), 0.5);
         // if (slope > 0.01)
         //     continue;
@@ -161,7 +166,14 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
     hisres->Draw("colz");
     InfileECAL->Close();
     InfileTrack->Close();
-    TFile *outfile = new TFile("PosRes.root", "RECREATE");
+    std::string outfilename;
+    if (ecalfile.find_last_of('/') != std::string::npos)
+    {
+        outfilename = ecalfile.substr(0, ecalfile.find_last_of('/')) + "/PosResolution.root";
+    }
+    else
+        outfilename = "PosResolution.root";
+    TFile *outfile = new TFile(outfilename.c_str(), "RECREATE");
     can1->Write();
     can2->Write();
     can3->Write();

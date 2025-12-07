@@ -11,9 +11,11 @@
 #include "TGraph.h"
 #include "TCanvas.h"
 #include "TStyle.h"
+#include "TLegend.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
+#include "TAxis.h"
 using namespace std;
 using namespace TMath;
 
@@ -175,6 +177,29 @@ void seek_parameters(vector<TString> rootfiles)
         outfile << '\n';
     }
     outfile.close();
+    // 作出高低增益通道的平均波形
+    //  TCanvas *cancom = new TCanvas("cancom", "cancom");
+    //  double HGfactor = *std::max_element(HGamp[12], HGamp[12] + 256);
+    //  double LGfactor = *std::max_element(LGamp[12], LGamp[12] + 256);
+    //  gr_HG->GetListOfFunctions()->Clear();
+    //  gr_LG->GetListOfFunctions()->Clear();
+    //  gr_HG->SetTitle("Average Waveform of H/LG;time[ns];normalized amplitude");
+    //  for (int i = 0; i < 256; i++)
+    //  {
+    //      gr_HG->SetPoint(i, 12.5 * i, HGamp[12][i] / HGfactor);
+    //      gr_LG->SetPoint(i, 12.5 * i, LGamp[12][i] / LGfactor);
+    //  }
+    //  gr_HG->SetMarkerColor(kRed);
+    //  gr_LG->SetMarkerColor(kBlue);
+    //  gr_HG->GetXaxis()->SetRangeUser(1200,2000);
+    //  gr_HG->Draw("ap");
+    //  gr_LG->Draw("p same");
+    //  TLegend *leg = new TLegend(0.6, 0.6, 0.8, 0.8);
+    //  leg->AddEntry(gr_HG, "High gain", "p");
+    //  leg->AddEntry(gr_LG, "Low gain", "p");
+    //  leg->Draw();
+    //  cancom->SaveAs("HLG_average_waveforms.png");
+    //  cancom->SaveAs("HLG_average_waveforms.pdf");
 }
 // 输入root文件或者文件列表
 int main(int argv, char *argc[])

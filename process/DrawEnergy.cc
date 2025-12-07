@@ -32,6 +32,7 @@ std::vector<double> DoFit(TH1F *h, TF1 *f1, TCanvas *c, TString xname, double pe
   double sigma = 0;
   std::vector<double> Vout;
   Vout.clear();
+  double fitrange[2] = {h->GetBinCenter(1) * 1.5, h->GetBinCenter(h->GetNbinsX())};
   for (int i = 0; i < 16; i++)
   {
     double a = 0.98 + 0.01 * double(i + 1);
@@ -39,7 +40,8 @@ std::vector<double> DoFit(TH1F *h, TF1 *f1, TCanvas *c, TString xname, double pe
     {
       double b = 0.030 + 0.0001 * double(j);
       f1->SetParameters(100, (h->GetMaximumBin() * h->GetBinWidth(0) + h->GetBinCenter(0)) * a, b, 0.6, 2.8);
-      h->Fit(f1, "ESR", "", h->GetBinCenter(1) * 1.5, h->GetBinCenter(h->GetNbinsX()));
+      h->Fit(f1, "ESR", "", fitrange[0], fitrange[1]);
+      // h->GetFunction("f1")->SetRange(fitrange[0], fitrange[1]);
       double Mean1 = f1->GetParameter(1);
       double Sigma1 = f1->GetParameter(2);
       double A1 = abs(f1->GetParameter(3));
@@ -97,8 +99,6 @@ std::vector<double> DoFit(TH1F *h, TF1 *f1, TCanvas *c, TString xname, double pe
         h->GetYaxis()->SetTitleSize(0.05);
         h->GetXaxis()->SetLabelSize(0.05);
         h->GetXaxis()->SetTitleSize(0.05);
-        // h->GetXaxis()->CenterTitle();
-        // h->GetYaxis()->CenterTitle();
         h->GetXaxis()->SetTitleOffset(0.9);
         h->GetYaxis()->SetTitleOffset(0.9);
 
@@ -106,10 +106,13 @@ std::vector<double> DoFit(TH1F *h, TF1 *f1, TCanvas *c, TString xname, double pe
         color = kBlue;
         h->SetLineColor(color);
         h->SetLineWidth(2);
-
+        h->GetXaxis()->SetRangeUser(700, 1000);
         h->Draw("hist");
+        f1->SetRange(fitrange[0], fitrange[1]);
         f1->SetLineColor(kOrange);
         f1->Draw("same");
+        gPad->Modified();
+        gPad->Update();
 
         pt11->Draw();
         pt21->Draw();
@@ -133,124 +136,6 @@ std::vector<double> DoFit(TH1F *h, TF1 *f1, TCanvas *c, TString xname, double pe
   Vout.push_back(mean);
   Vout.push_back(sigma);
   return Vout;
-}
-
-void PosRes(std::string ecalfile)
-{
-  gStyle->SetOptFit(1111);
-  TFile *InfileECAL = new TFile(ecalfile.data(), "READ");
-  TTree *TrECAL = (TTree *)InfileECAL->Get("rec_data");
-  vector<int> *SeedID = 0;
-  vector<int> *HitID = 0;
-  vector<double> *Energy_5x5 = 0;
-  vector<double> *Energy_Hit = 0;
-  vector<double> *ShowerX = 0;
-  vector<double> *ShowerY = 0;
-  int triggerID;
-  TrECAL->SetBranchAddress("EventID", &triggerID);
-  TrECAL->SetBranchAddress("ShowerID", &SeedID);
-  TrECAL->SetBranchAddress("ShowerE5x5", &Energy_5x5);
-  TrECAL->SetBranchAddress("HitID", &HitID);
-  TrECAL->SetBranchAddress("HitEnergy", &Energy_Hit);
-  TrECAL->SetBranchAddress("ShowerPosX5x5", &ShowerX);
-  TrECAL->SetBranchAddress("ShowerPosY5x5", &ShowerY);
-
-  TH1D *hisx = new TH1D("his1", "posx", 100, -5, 5);
-  TH1D *hisy = new TH1D("his2", "posy", 100, -5, 5);
-  TH2D *hisecal = new TH2D("his3", "posecal", 50, -5, 5, 50, -5, 5);
-  TH2D *histr = new TH2D("his4", "postracker", 50, -5, 5, 50, -5, 5);
-  TH2D *hisres = new TH2D("his5", "posres", 50, -5, 5, 50, -5, 5);
-  hisx->SetTitle("position resolution;posx[cm];counts");
-  hisy->SetTitle("position resolution;posx[cm];counts");
-  hisres->SetTitle("position distribution;posx[cm];posy[cm]");
-  hisx->SetDirectory(nullptr);
-  hisy->SetDirectory(nullptr);
-  hisecal->SetDirectory(nullptr);
-  histr->SetDirectory(nullptr);
-  hisres->SetDirectory(nullptr);
-
-  for (int i = 0; i < TrECAL->GetEntries(); i++)
-  {
-    TrECAL->GetEntry(i);
-    if (ShowerX->size() == 1)
-      //   continue;
-      hisecal->Fill(ShowerX->at(0), ShowerY->at(0));
-  }
-  TCanvas *can3 = new TCanvas();
-  hisecal->Draw("colz");
-  InfileECAL->Close();
-}
-void PosRes(std::string ecalfile, std::string trackfile)
-{
-  gStyle->SetOptFit(1111);
-  TFile *InfileECAL = new TFile(ecalfile.data(), "READ");
-  TTree *TrECAL = (TTree *)InfileECAL->Get("rec_data");
-  vector<int> *SeedID = 0;
-  vector<int> *HitID = 0;
-  vector<double> *Energy_5x5 = 0;
-  vector<double> *Energy_Hit = 0;
-  vector<double> *ShowerX = 0;
-  vector<double> *ShowerY = 0;
-  int triggerID;
-  TrECAL->SetBranchAddress("EventID", &triggerID);
-  TrECAL->SetBranchAddress("ShowerID", &SeedID);
-  TrECAL->SetBranchAddress("ShowerE5x5", &Energy_5x5);
-  TrECAL->SetBranchAddress("HitID", &HitID);
-  TrECAL->SetBranchAddress("HitEnergy", &Energy_Hit);
-  TrECAL->SetBranchAddress("ShowerPosX5x5", &ShowerX);
-  TrECAL->SetBranchAddress("ShowerPosY5x5", &ShowerY);
-
-  TH1D *hisx = new TH1D("his1", "posx", 100, -5, 5);
-  TH1D *hisy = new TH1D("his2", "posy", 100, -5, 5);
-  TH2D *hisecal = new TH2D("his3", "posecal", 50, -5, 5, 50, -5, 5);
-  TH2D *histr = new TH2D("his4", "postracker", 50, -5, 5, 50, -5, 5);
-  TH2D *hisres = new TH2D("his5", "posres", 50, -5, 5, 50, -5, 5);
-  hisx->SetTitle("position resolution;posx[cm];counts");
-  hisy->SetTitle("position resolution;posx[cm];counts");
-  hisres->SetTitle("position distribution;posx[cm];posy[cm]");
-  hisx->SetDirectory(nullptr);
-  hisy->SetDirectory(nullptr);
-  hisecal->SetDirectory(nullptr);
-  histr->SetDirectory(nullptr);
-  hisres->SetDirectory(nullptr);
-
-  TFile *InfileTrack = new TFile(trackfile.data(), "READ");
-  TTree *TrTrack = (TTree *)InfileTrack->Get("Track");
-  int trackID;
-  double trackPos[3], trackVec[3];
-  TrTrack->SetBranchAddress("event", &trackID);
-  TrTrack->SetBranchAddress("ecalextraHit", &trackPos);
-  TrTrack->SetBranchAddress("ecaltrackVec", &trackVec);
-  for (int i = 0; i < std::min(TrECAL->GetEntries(), TrTrack->GetEntries()); i++)
-  {
-    TrECAL->GetEntry(i);
-    TrTrack->GetEntry(i);
-    if (!(ShowerX->size() == 1 && Energy_5x5->at(0) > 500 && triggerID == trackID && SeedID->at(0) == 326034 && (trackPos[0] != 0 || trackPos[1] != 0) && (sqrt(Power(trackVec[1], 2) + Power(trackVec[0], 2)) < 0.002)))
-      continue;
-    if (!(fabs(ShowerX->at(0)) < 1 && fabs(ShowerY->at(0)) < 1))
-      continue;
-    // if ((trackPos[0] > -20 && trackPos[0] < 0 && trackPos[1] > -10 && trackPos[1] < 10))
-    //   continue;
-    hisx->Fill(ShowerX->at(0) - trackPos[0] / 10);
-    hisy->Fill(ShowerY->at(0) + trackPos[1] / 10);
-    hisecal->Fill(ShowerX->at(0), ShowerY->at(0));
-    histr->Fill(trackPos[0] / 10, -trackPos[1] / 10);
-    hisres->Fill(ShowerX->at(0) - trackPos[0] / 10, ShowerY->at(0) + trackPos[1] / 10);
-  }
-  TCanvas *can1 = new TCanvas();
-  hisx->Draw();
-  hisx->Fit("gaus");
-  TCanvas *can2 = new TCanvas();
-  hisy->Draw();
-  hisy->Fit("gaus");
-  TCanvas *can3 = new TCanvas();
-  hisecal->Draw("colz");
-  TCanvas *can4 = new TCanvas();
-  histr->Draw("colz");
-  TCanvas *can5 = new TCanvas();
-  hisres->Draw("colz");
-  InfileECAL->Close();
-  InfileTrack->Close();
 }
 
 void DrawEnergy(string rootfile, double energy = 1000)
@@ -314,6 +199,8 @@ void DrawEnergy(string rootfile, double energy = 1000)
     t->GetEntry(i);
     for (size_t j = 0; j < Energy_EAll->size(); j++)
     {
+      if (Energy_EAll->at(j) > 10000)
+        continue;
       energy_test->Fill(Energy_EAll->at(j));
       if ((Energy_EAll->at(j) > maxenergy) && (energy_test->GetBinContent(static_cast<int>(Energy_EAll->at(j) / energy_test->GetBinWidth(0))) > 50))
         maxenergy = Energy_EAll->at(j);
@@ -364,11 +251,8 @@ void DrawEnergy(string rootfile, double energy = 1000)
         if (hitnum < 2)
           continue;
         // select those events hitting the central area
-        int poslimit = 2;
-        // if (!(ShowerX->at(j) > -poslimit && ShowerX->at(j) < poslimit && ShowerY->at(j) < poslimit && ShowerY->at(j) > -poslimit))
-        //   continue;
+        // if (fabs(ShowerX->at(j)) < 2 && fabs(ShowerY->at(j)) < 2)
 
-        // henergy_ecal->Fill(Energy_3x3->at(j) / 1000);
         henergy_ecal->Fill(Energy_5x5->at(j) / 1000);
         hpos->Fill(ShowerX->at(j), ShowerY->at(j));
         hposx->Fill(ShowerX->at(j));
@@ -390,7 +274,7 @@ void DrawEnergy(string rootfile, double energy = 1000)
   hpos->GetYaxis()->SetTitleOffset(0.9);
   hpos->SetLineColor(kBlue);
   hpos->SetLineWidth(2);
-  hpos->Draw("colz");
+  // hpos->Draw("colz");
   // c_pos->SaveAs(Form("%s.png", pos_name.Data()));
   TString posx_name = "c_posx_" + energy_str;
   TCanvas *c_posx = new TCanvas(posx_name, posx_name, 800, 600);

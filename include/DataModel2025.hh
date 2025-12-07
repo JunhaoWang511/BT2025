@@ -9,8 +9,10 @@
 #define _Npoints 256
 #define _Nnoise 25
 // set time window begin&end
-#define _timewinb 90
-#define _timewine 130
+// #define _timewinb 90
+// #define _timewine 130
+#define _timewinb 100
+#define _timewine 116
 
 class DataModel2025
 {

@@ -173,7 +173,7 @@ int main(int argc, char const *argv[])
       int LGMaxID = 0;
       double LGMaxAmp = 0;
 
-      int Pstart = 90, Pstop = 130;
+      int Pstart = 90, Pstop = 125;
       // int Pstart = 65, Pstop = 95;
       if (TimeDelay)
       {
@@ -202,7 +202,7 @@ int main(int argc, char const *argv[])
       if ((HGMaxID < (Pstart + 10) || HGMaxID > (Pstop - 10)) && HGMaxAmp < 16000)
         IsOsc = true;
 
-      int cc = 40;
+      int cc = 20;
       int dd = 10;
 
       VectorXd hgtimingvec(cc);
@@ -215,17 +215,6 @@ int main(int argc, char const *argv[])
       }
 
       double time, amp, pedestal, chi2;
-      // if (triggerID == 0)
-      // {
-      //   for (int j = 0; j < 9; j++)
-      //     f1->SetParameter(j, Para.HGWfPara(k, j));
-      //   f1->Draw();
-      //   gPad->SaveAs(Form("fitfunctionHG_%d.png", k));
-      //   for (int j = 0; j < 9; j++)
-      //     f1->SetParameter(j, Para.LGWfPara(k, j));
-      //   f1->Draw();
-      //   gPad->SaveAs(Form("fitfunctionLG_%d.png", k));
-      // }
       if (Hit[k]->HighGainPeak > (Para.HGPedestal(k) + 6 * Para.HGNoise(k)) && Hit[k]->HighGainPeak < 16000 && IsOsc == false)
       {
         for (int j = 0; j < 9; j++)

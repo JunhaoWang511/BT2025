@@ -314,7 +314,7 @@ bool Decode2025::ReadData(std::ifstream &indata, double &timestamp, std::vector<
         ctime = temp2 - static_cast<int>(pow(2, 16)) * temp3;
         channelID.push_back(ch);
         coarsetime.push_back(ctime * 12.5);
-        finetime.push_back(ftime * 12.5);
+        finetime.push_back(ftime);
         amplitude.push_back(amp);
     }
 

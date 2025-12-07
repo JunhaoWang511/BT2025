@@ -55,16 +55,16 @@ void RecHit::setEnergy(const double hgamp, const double lgamp, const double rati
   if (hgamp < (hgsatupoint - 400))
   {
     if (hgamp < 3 * hgnoise)
-      m_Energy = 0;
-    else
-      m_Energy = hgamp / (hgmip - hgpedestal) * 168;
+  m_Energy = 0;
+  else
+  m_Energy = hgamp / (hgmip - hgpedestal) * 168;
   }
   else
   {
     if (lgamp < 3 * lgnoise)
-      m_Energy = 0;
-    else
-      m_Energy = lgamp * ratio / (hgmip - hgpedestal) * 168;
+  m_Energy = 0;
+  else
+  m_Energy = lgamp * ratio / (hgmip - hgpedestal) * 168;
   }
 }
 
@@ -74,7 +74,7 @@ void RecHit::setEnergy(const double amp, double hgnoise, const double hgpedestal
   if (m_Energy < 3 * hgnoise)
     m_Energy = 0;
   else
-    m_Energy = (m_Energy) / (hgmip - hgpedestal) * 168;
+    m_Energy = (m_Energy) / (hgmip - hgpedestal) * 181.8;
 }
 
 void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ratio, const double hgsatupoint, const double hgpedestal, const double hgnoise, const double lgpedestal, const double lgnoise, const double lgmip, const double hgmip, TRandom3 r1)
@@ -85,7 +85,7 @@ void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ra
     if (m_Energy < 3 * hgnoise)
       m_Energy = 0;
     else
-      m_Energy = m_Energy / (hgmip - hgpedestal) * 168;
+      m_Energy = m_Energy / (hgmip - hgpedestal) * 181.8;
   }
   else
   {
@@ -93,7 +93,7 @@ void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ra
     if (m_Energy < 3 * lgnoise)
       m_Energy = 0;
     else
-      m_Energy = m_Energy * ratio / (hgmip - hgpedestal) * 168;
+      m_Energy = m_Energy * ratio / (hgmip - hgpedestal) * 181.8;
   }
 }
 
@@ -105,7 +105,7 @@ void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ra
     if (m_Energy < 3 * hgnoise)
       m_Energy = 0;
     else
-      m_Energy = (m_Energy / ratio) / (lgmip - lgpedestal) * 168;
+      m_Energy = (m_Energy / ratio) / (lgmip - lgpedestal) * 181.8;
   }
   else
   {
@@ -113,7 +113,7 @@ void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ra
     if (m_Energy < 3 * lgnoise)
       m_Energy = 0;
     else
-      m_Energy = m_Energy / (lgmip - lgpedestal) * 168;
+      m_Energy = m_Energy / (lgmip - lgpedestal) * 181.8;
   }
 }
 
@@ -125,7 +125,7 @@ void RecHit::setEnergy(const double peak, const double lgpedestal, const bool is
     if (m_Energy < 3 * hgnoise)
       m_Energy = 0;
     else
-      m_Energy = (m_Energy / ratio) / (lgmip - lgpedestal) * 168;
+      m_Energy = (m_Energy / ratio) / (lgmip - lgpedestal) * 181.8;
   }
   else
   {
@@ -133,7 +133,7 @@ void RecHit::setEnergy(const double peak, const double lgpedestal, const bool is
     if (m_Energy < 3 * lgnoise)
       m_Energy = 0;
     else
-      m_Energy = m_Energy / (lgmip - lgpedestal) * 168;
+      m_Energy = m_Energy / (lgmip - lgpedestal) * 181.8;
   }
 }
 
