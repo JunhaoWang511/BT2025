@@ -55,16 +55,16 @@ void RecHit::setEnergy(const double hgamp, const double lgamp, const double rati
   if (hgamp < (hgsatupoint - 400))
   {
     if (hgamp < 3 * hgnoise)
-  m_Energy = 0;
-  else
-  m_Energy = hgamp / (hgmip - hgpedestal) * 168;
+      m_Energy = 0;
+    else
+      m_Energy = hgamp / (hgmip - hgpedestal) * 181.8;
   }
   else
   {
     if (lgamp < 3 * lgnoise)
-  m_Energy = 0;
-  else
-  m_Energy = lgamp * ratio / (hgmip - hgpedestal) * 168;
+      m_Energy = 0;
+    else
+      m_Energy = lgamp * ratio / (hgmip - hgpedestal) * 181.8;
   }
 }
 

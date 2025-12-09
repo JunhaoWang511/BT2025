@@ -21,6 +21,7 @@
 #include <TPaveStats.h>
 #include <TChain.h>
 #include <TLatex.h>
+#include <TRandom3.h>
 using namespace TMath;
 using namespace std;
 
@@ -110,31 +111,39 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
     bool useflag;
     // ECAL position along z axis
     double posHit[3];
-    posHit[2] = 7800;
+    posHit[2] = 7600;
     TrTrack->SetBranchAddress("event", &trackID);
     TrTrack->SetBranchAddress("ecalextraHit", &trackPos);
     TrTrack->SetBranchAddress("ecaltrackVec", &trackVec);
+    // TrTrack->SetBranchAddress("XfitPars", xpars);
+    // TrTrack->SetBranchAddress("YfitPars", ypars);
+    // TrTrack->SetBranchAddress("useflag", &useflag);
     TrTrack->SetBranchAddress("X2345fitPars", xpars);
     TrTrack->SetBranchAddress("Y2345fitPars", ypars);
     TrTrack->SetBranchAddress("ecaluseflag", &useflag);
-    TrTrack->SetBranchAddress("XfitPars", xfitpar);
-    TrTrack->SetBranchAddress("YfitPars", yfitpar);
     for (int i = 0; i < std::min(TrTrack->GetEntries(), TrECAL->GetEntries()); i++)
     {
         TrTrack->GetEntry(i);
         TrECAL->GetEntry(i);
-        posHit[0] = xpars[0] * posHit[2] + xpars[1] + 4.72;
-        posHit[1] = ypars[0] * posHit[2] + ypars[1] + 3.14;
-        if (!(useflag && triggerID == trackID && ShowerX->size() == 1 && SeedID->at(0) == 326034 && Energy_5x5->at(0) > energy_cut))
+        posHit[0] = xpars[0] * posHit[2] + xpars[1] + 4.72 - 5.04;
+        posHit[1] = ypars[0] * posHit[2] + ypars[1] + 3.14 + 4.26;
+        if (!(useflag && triggerID == trackID && ShowerX->size() == 1 && SeedID->at(0) == 326034 && Energy_5x5->at(0) > 900))
             continue;
-        // if (!(fabs(xfitpar[2] - 1) < 1e-5 && fabs(yfitpar[2] - 1) < 1e-6))
+        // if (fabs(xpars[0]) < 2e-3 || fabs(ypars[0]) < 2e-3)
         //     continue;
-        // if (fabs(xpars[0]) > 2e-3 || fabs(ypars[0]) > 2e-3)
+        // if (!(fabs(posHit[0]) < 25 && fabs(posHit[1]) < 25 && (fabs(posHit[0]) > 15 || fabs(posHit[1]) > 15)))
         //     continue;
         if (!(fabs(posHit[0]) < 25 && fabs(posHit[1]) < 25))
             continue;
+        // if (fabs(posHit[0]) < 20 && fabs(posHit[1]) < 20)
+        // {
+        //     if (gRandom->Uniform() < 0.75)
+        //         continue;
+        // }
         // double slope = TMath::Power(TMath::Power(xpars[0], 2) + TMath::Power(ypars[0], 2), 0.5);
         // if (slope > 0.01)
+        //     continue;
+        // if (!(fabs(ShowerX->at(0)) < 1 && fabs(ShowerY->at(0)) < 1))
         //     continue;
         hisx->Fill(ShowerX->at(0) * 10 - posHit[0]);
         hisy->Fill(ShowerY->at(0) * 10 + posHit[1]);
@@ -150,12 +159,12 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
 
     TCanvas *can1 = new TCanvas("posXres", "posXres");
     hisx->Draw();
-    hisx->Fit("gaus");
+    hisx->Fit("gaus", "R", "", -10, 10);
     tex->DrawLatexNDC(0.3, 0.8, Form("#sigma=%.2f mm", hisx->GetFunction("gaus")->GetParameter(2)));
     // can1->SaveAs(Form("posresolution_filterXY.png"));
     TCanvas *can2 = new TCanvas("posYres", "posYres");
     hisy->Draw();
-    hisy->Fit("gaus");
+    hisy->Fit("gaus", "R", "", -10, 10);
     tex->DrawLatexNDC(0.3, 0.8, Form("#sigma=%.2f mm", hisy->GetFunction("gaus")->GetParameter(2)));
     // can2->SaveAs(Form("posresolution_filterXY.png"));
     TCanvas *can3 = new TCanvas("posXYecal", "posXYecal");

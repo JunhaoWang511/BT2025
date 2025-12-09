@@ -24,12 +24,12 @@ using namespace Eigen;
 
 Double_t ff(double *x, double *par)
 {
-    Double_t val = par[0] * exp(-(x[0] - par[1]) / par[2]) + par[3] * exp(-(x[0] - par[1]) / par[4]) + par[5] * exp(-(x[0] - par[1]) / par[6]) + par[7] * exp(-(x[0] - par[1]) / par[8]);
+  Double_t val = par[0] * exp(-(x[0] - par[1]) / par[2]) + par[3] * exp(-(x[0] - par[1]) / par[4]) + par[5] * exp(-(x[0] - par[1]) / par[6]) + par[7] * exp(-(x[0] - par[1]) / par[8]);
 
-    if (x[0] >= par[1] && x[0] <= 3000)
-        return val * TMath::Power((x[0] - par[1]), 2);
-    else
-        return 0;
+  if (x[0] >= par[1] && x[0] <= 3000)
+    return val * TMath::Power((x[0] - par[1]), 2);
+  else
+    return 0;
 }
 
 bool isTextFile(const string &fileName)
@@ -130,7 +130,7 @@ int main(int argc, char const *argv[])
 
   int nEntries = tree->GetEntries();
   int interval = nEntries / 20;
-  
+
   for (int i = 0; i < nEntries; i++)
   {
     int progress = static_cast<float>(i + 1) / nEntries * 100;
