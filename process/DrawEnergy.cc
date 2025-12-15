@@ -32,7 +32,7 @@ std::vector<double> DoFit(TH1F *h, TF1 *f1, TCanvas *c, TString xname, double pe
   double sigma = 0;
   std::vector<double> Vout;
   Vout.clear();
-  double fitrange[2] = {h->GetBinCenter(1) * 1.5, h->GetBinCenter(h->GetNbinsX())};
+  double fitrange[2] = {h->GetBinCenter(1) * 1.6, h->GetBinCenter(h->GetNbinsX())};
   for (int i = 0; i < 16; i++)
   {
     double a = 0.98 + 0.01 * double(i + 1);
@@ -100,7 +100,11 @@ std::vector<double> DoFit(TH1F *h, TF1 *f1, TCanvas *c, TString xname, double pe
         h->GetXaxis()->SetLabelSize(0.05);
         h->GetXaxis()->SetTitleSize(0.05);
         h->GetXaxis()->SetTitleOffset(0.9);
-        h->GetYaxis()->SetTitleOffset(0.9);
+        h->GetYaxis()->SetTitleOffset(1.2);
+        gPad->SetLeftMargin(0.13);
+        gPad->SetBottomMargin(0.12);
+        gPad->Modified();
+        gPad->Update();
 
         int color;
         color = kBlue;
@@ -320,6 +324,7 @@ void DrawEnergy(string rootfile, double energy = 1000)
   mean = Vfit[0];
   sigma = Vfit[1];
   c->SaveAs(Form("%s.png", canvas_name.Data()));
+  c->SaveAs(Form("%s.pdf", canvas_name.Data()));
   cout << t->GetEntries() << " entries in total." << endl;
   cout << "Event entries selected: " << henergy_ecal->Integral() << endl;
   cout << "Energy: " << energy_str << ", Mean: " << mean * 1000 << " MeV, Resolution: " << sigma << " %" << endl;
