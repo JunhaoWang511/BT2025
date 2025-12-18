@@ -57,6 +57,29 @@ void DataModel2025::Set(int crystalID, float tmpera1, float tmpera2, float rowal
     LowGainPeak = mlpeak;
     HighGainPeak = mhpeak;
 }
+void DataModel2025::Set(int crystalID, double tmpera1, double tmpera2, double rowal[_Npoints], double rowah[_Npoints], double rownl[_Nnoise], double rownh[_Nnoise], double mlplat, double mhplat, double mlpeak, double mhpeak)
+{
+    for (int i = 0; i < _Npoints; i++)
+    {
+        LAmplitude[i] = rowal[i];
+        HAmplitude[i] = rowah[i];
+    }
+
+    for (int i = 0; i < _Nnoise; i++)
+    {
+        LNoise[i] = rownl[i];
+        HNoise[i] = rownh[i];
+    }
+
+    CrystalID = crystalID;
+    Temperature1 = tmpera1;
+    Temperature2 = tmpera2;
+
+    LowGainPedestal = mlplat;
+    HighGainPedestal = mhplat;
+    LowGainPeak = mlpeak;
+    HighGainPeak = mhpeak;
+}
 
 void DataModel2025::AddHit(double timestamp, double coarsetime, double finetime, double amplitude)
 {

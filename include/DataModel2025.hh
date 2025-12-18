@@ -20,6 +20,7 @@ public:
     DataModel2025();
     ~DataModel2025();
     void Set(int, float, float, float[_Npoints], float[_Npoints], float[_Nnoise], float[_Nnoise], float, float, float, float);
+    void Set(int, double, double, double[_Npoints], double[_Npoints], double[_Nnoise], double[_Nnoise], double, double, double, double);
     bool clear();
     void AddHit(double, double, double, double);
 
