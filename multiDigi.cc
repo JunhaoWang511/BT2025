@@ -213,6 +213,8 @@ int main(int argc, char const *argv[])
                 std::copy(LGAmp + k, LGAmp + k + 20, wavetmp);
                 // 采样起始点是粗时间，拟合得到幅度和细时间(ns)
                 amptmp = std::inner_product(ampVec, ampVec + 20, wavetmp, 0);
+                // 修正拟合幅度
+                amptmp += 10;
                 // 如果幅度小于20或者细时间超过一个采样点间隔，认为不是一个本底/信号
                 if (amptmp < 20)
                     continue;
@@ -223,9 +225,9 @@ int main(int argc, char const *argv[])
                     continue;
                 // std::cout << " amplitude=" << amptmp << std::endl;
                 // std::cout << "fine time=" << timetmp << std::endl;
-                timestamp = 65 * 12.5;
+                timestamp = 64 * 12.5;
                 coarsetime = k * 12.5;
-                finetime = timetmp * 100 + 625;
+                finetime = -timetmp * 100 + 625;
                 amplitude = amptmp;
                 mHit[j]->AddHit(timestamp, coarsetime, finetime, amplitude);
                 if (DrawGraph)
