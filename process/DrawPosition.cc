@@ -145,7 +145,7 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
         //     continue;
         // if (!(fabs(ShowerX->at(0)) < 1 && fabs(ShowerY->at(0)) < 1))
         //     continue;
-        hisx->Fill(ShowerX->at(0) * 10 - posHit[0]);
+        hisx->Fill(ShowerX->at(0) * 10 + posHit[0]);
         hisy->Fill(ShowerY->at(0) * 10 + posHit[1]);
         hisecal->Fill(ShowerX->at(0) * 10, ShowerY->at(0) * 10);
         histr->Fill(posHit[0], -posHit[1]);

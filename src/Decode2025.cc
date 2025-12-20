@@ -965,16 +965,17 @@ void Decode2025::GetHitOnline(std::ifstream &indata)
                     // ^
                     // |
                     // |
-                    // |boardID: 0   1   2   3   4
-                    // |  C:                        channelID:
-                    // |  032 # 1-5 2-5 3-5 4-5 5-5     3 3
-                    // |  033 # 1-4 2-4 3-4 4-4 5-4     0 2
-                    // |  034 # 1-3 2-3 3-3 4-3 5-3     1 1
-                    // |  035 # 1-2 2-2 3-2 4-2 5-2     4 6
-                    // |  036 # 1-1 2-1 3-1 4-1 5-1     5 5
+                    // |boardID: 4   3   2   1   0
+                    // |  C:                        channelID（第二列是在线处理通道）:
+                    // |  032 # 5-5 4-5 3-5 2-5 1-5     3 3
+                    // |  033 # 5-4 4-4 3-4 2-4 1-4     0 2
+                    // |  034 # 5-3 4-3 3-3 2-3 1-3     1 1
+                    // |  035 # 5-2 4-2 3-2 2-2 1-2     4 6
+                    // |  036 # 5-1 4-1 3-1 2-1 1-1     5 5
                     // |      # # # # # # # # # # #
                     // |  M:    28  27  26  25  24
                     // ----------------------------------> X axes
+                    // 束流从+z方向打到-z方向（右手系）
 
                     // read states of a board: current, voltage and 10 temperature points
                     ReadState(indata, mTemperature, mVoltage[*BoardID], mCurrent[*BoardID]);
@@ -1017,7 +1018,7 @@ void Decode2025::GetHitOnline(std::ifstream &indata)
                                     temperature[j] = mTemperature[j + 2 * (i - 1)];
                             }
                             // crystalID
-                            M = 28 - *BoardID;
+                            M = 24 + *BoardID;
                             C = Channel2C(i);
                             if (mChannelInvert)
                             {
