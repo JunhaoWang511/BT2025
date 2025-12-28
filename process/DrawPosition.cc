@@ -148,8 +148,8 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
         hisx->Fill(ShowerX->at(0) * 10 + posHit[0]);
         hisy->Fill(ShowerY->at(0) * 10 + posHit[1]);
         hisecal->Fill(ShowerX->at(0) * 10, ShowerY->at(0) * 10);
-        histr->Fill(posHit[0], -posHit[1]);
-        hisres->Fill(ShowerX->at(0) * 10 - posHit[0], ShowerY->at(0) * 10 + posHit[1]);
+        histr->Fill(-posHit[0], -posHit[1]);
+        hisres->Fill(ShowerX->at(0) * 10 + posHit[0], ShowerY->at(0) * 10 + posHit[1]);
     }
     TLatex *tex = new TLatex();
     tex->SetTextAlign(20);

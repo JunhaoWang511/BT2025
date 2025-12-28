@@ -60,12 +60,12 @@ void TemplateSample(double sample[][_Nsample])
                        { return ff->Eval(x[0]) / max; }, 0, 3200, 9);
     // fun->SetLineColor(kRed);
     // fun->Draw();
-    // 采样起始点从69.5个点（856.25 ns）到70.5个点（868.75 ns），采样1250份（间隔10 ps），采样长度为40个点
+    // 采样起始点从70个点（862.5 ns）到71个点（875 ns），采样1250份（间隔10 ps），采样长度为40个点
     double sampletime;
     for (int i = 0; i < 1250; i++)
         for (int j = 0; j < _Nsample; j++)
         {
-            sampletime = 856.25 + 0.01 * i + 12.5 * j;
+            sampletime = 862.5 + 0.01 * i + 12.5 * j;
             sample[i][j] = fun->Eval(sampletime);
         }
 }
@@ -171,20 +171,42 @@ int main(int argc, char const *argv[])
     const double ampVec[20] = {-6.38357040248042e-05, -0.00330697007822949, -0.00398696499554231, 0.00179119025323171, 0.0134049745184865, 0.0285970474714096, 0.0449272265503205, 0.0604065482502062, 0.0736885867430082, 0.0840412605666282, 0.0912268879037425, 0.0953595590576070, 0.0967738233148716, 0.0959185309201458, 0.0932787330236419, 0.0893231471006163, 0.0844725072062953, 0.0790836856326403, 0.0734449149428907, 0.0677782432443050};
     const double amptimeVec[20] = {-0.0472543391531407, -3.43817924184712, -8.37953139807132, -12.0715530570965, -13.7001056339471, -13.3994007185142, -11.6731104324930, -9.09225696548941, -6.15481131398440, -3.23549247413817, -0.582418053622125, 1.66481780411593, 3.44986840988616, 4.77456618906330, 5.67744119483497, 6.21693646975686, 6.45923915076050, 6.47009666969433, 6.30980287939698, 6.03054868872617};
     double wavetmp[20], timetmp, amptmp;
+    // 原始波形
     TGraph *gr = new TGraph(_Npoints);
+    gr->SetTitle(";;ADC value");
+    gr->GetYaxis()->SetTitleSize(0.06);
+    gr->GetYaxis()->SetTitleOffset(0.5);
+    gr->GetYaxis()->SetLabelSize(0.04);
     gr->SetMarkerStyle(8);
     gr->SetMarkerSize(0.4);
+    // 剩余波形
     TGraph *gr1 = new TGraph(_Npoints);
+    gr1->SetTitle(";Time[ns];");
+    gr1->GetXaxis()->SetTitleSize(0.15);
+    gr1->GetXaxis()->SetLabelSize(0.1);
+    gr1->GetYaxis()->SetLabelSize(0.1);
     gr1->SetMarkerStyle(8);
     gr1->SetMarkerSize(0.4);
     gr1->SetMarkerColor(kRed);
+    // 模板波形
     TGraph *gr2 = new TGraph(_Nsample);
     gr2->SetMarkerStyle(8);
     gr2->SetMarkerSize(0.4);
     gr2->SetMarkerColor(kGreen);
+    TCanvas *can = new TCanvas();
+    TPad *pad1 = new TPad("pad1", "pad1", 0, 0.30, 1, 1);
+    pad1->SetBottomMargin(0.02); // 减小空白
+    pad1->Draw();
+    can->cd();
+    TPad *pad2 = new TPad("pad2", "pad2", 0, 0, 1, 0.30);
+    pad2->SetTopMargin(0.02);
+    pad2->SetBottomMargin(0.30);
+    pad2->Draw();
     TLatex *tex = new TLatex();
-    tex->SetTextSize(0.06);
+    tex->SetTextSize(0.08);
     tex->SetTextAlign(10);
+    tex->SetTextFont(42);
+    // 作图开关选项
     bool DrawGraph = false;
     for (int i = 0; i < nEntries; i++)
     {
@@ -208,13 +230,13 @@ int main(int argc, char const *argv[])
             std::copy(Hit[j]->LAmplitude, Hit[j]->LAmplitude + _Npoints, LGAmp);
             for (int m = 0; m < _Npoints; m++)
                 LGAmp[m] -= LGped[j];
-            for (int k = 0; k < 160; k++)
+            for (int k = 0; k < 150; k++)
             {
                 std::copy(LGAmp + k, LGAmp + k + 20, wavetmp);
                 // 采样起始点是粗时间，拟合得到幅度和细时间(ns)
                 amptmp = std::inner_product(ampVec, ampVec + 20, wavetmp, 0);
                 // 修正拟合幅度
-                amptmp += 10;
+                amptmp += 15;
                 // 如果幅度小于20或者细时间超过一个采样点间隔，认为不是一个本底/信号
                 if (amptmp < 20)
                     continue;
@@ -223,8 +245,6 @@ int main(int argc, char const *argv[])
                 // 这里要判断timetmp的取值范围！！
                 if (fabs(timetmp) > 6.25)
                     continue;
-                // std::cout << " amplitude=" << amptmp << std::endl;
-                // std::cout << "fine time=" << timetmp << std::endl;
                 timestamp = 64 * 12.5;
                 coarsetime = k * 12.5;
                 finetime = -timetmp * 100 + 625;
@@ -232,9 +252,11 @@ int main(int argc, char const *argv[])
                 mHit[j]->AddHit(timestamp, coarsetime, finetime, amplitude);
                 if (DrawGraph)
                 {
+                    pad1->cd();
                     for (int m = 0; m < _Npoints; m++)
                         gr->SetPoint(m, 12.5 * m, LGAmp[m]);
                     gr->Draw("ap");
+                    gr->GetXaxis()->SetLabelSize(0);
                 }
                 // 在波形上扣除这个本底/信号
                 int tempN = static_cast<int>(finetime);
@@ -246,18 +268,19 @@ int main(int argc, char const *argv[])
                     {
                         gr2->SetPoint(m, (k + m) * 12.5, tempVec[tempN][m] * amptmp);
                         gr2->Draw("p same");
+                        tex->DrawLatexNDC(0.6, 0.7, Form("peak value=%.0lf", Hit[j]->LowGainPeak - LGped[j]));
+                        tex->DrawLatexNDC(0.6, 0.6, Form("fit result=%.0lf", amplitude));
+                        // tex->DrawLatexNDC(0.6, 0.4, Form("fine time=%.2lf ns", timetmp));
                     }
                 }
                 if (DrawGraph)
                 {
+                    pad2->cd();
                     for (int m = 0; m < _Npoints; m++)
                         gr1->SetPoint(m, 12.5 * m, LGAmp[m]);
-                    gr1->Draw("p same");
-                    tex->DrawLatexNDC(0.5, 0.7, Form("amp peak=%.0lf", Hit[j]->LowGainPeak - LGped[j]));
-                    tex->DrawLatexNDC(0.5, 0.6, Form("fit peak=%.0lf", amplitude));
-                    tex->DrawLatexNDC(0.5, 0.4, Form("fine time=%.2lf", timetmp));
-                    if (amplitude > 500)
-                        gPad->SaveAs(Form("subtract_Event%i_Hit%i_Point%i.png", i, j, k));
+                    gr1->Draw("ap");
+                    // if (amplitude > 200)
+                        can->SaveAs(Form("subtract_Event%i_Hit%i_Point%i.png", i, j, k));
                 }
             }
         }
