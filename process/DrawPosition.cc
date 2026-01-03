@@ -86,7 +86,7 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
         }
     }
     energy = std::round(maxbin * energy_test->GetBinWidth(0) / 100) * 100;
-    double energy_cut = energy / 5;
+    double energy_cut = energy / 2;
 
     TH1D *hisx = new TH1D("his1", "posx", 100, -40, 40);
     TH1D *hisy = new TH1D("his2", "posy", 100, -40, 40);
@@ -111,40 +111,43 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
     bool useflag;
     // ECAL position along z axis
     double posHit[3];
-    posHit[2] = 7600;
-    TrTrack->SetBranchAddress("event", &trackID);
+    // posHit[2] = 8150;
+    // posHit[2] = 7450;
+    posHit[2] = 3250;
+    // TrTrack->SetBranchAddress("event", &trackID);
     TrTrack->SetBranchAddress("ecalextraHit", &trackPos);
     TrTrack->SetBranchAddress("ecaltrackVec", &trackVec);
-    // TrTrack->SetBranchAddress("XfitPars", xpars);
-    // TrTrack->SetBranchAddress("YfitPars", ypars);
-    // TrTrack->SetBranchAddress("useflag", &useflag);
-    TrTrack->SetBranchAddress("X2345fitPars", xpars);
-    TrTrack->SetBranchAddress("Y2345fitPars", ypars);
-    TrTrack->SetBranchAddress("ecaluseflag", &useflag);
+    TrTrack->SetBranchAddress("XfitPars", xpars);
+    TrTrack->SetBranchAddress("YfitPars", ypars);
+    TrTrack->SetBranchAddress("useflag", &useflag);
+    // TrTrack->SetBranchAddress("X2345fitPars", xpars);
+    // TrTrack->SetBranchAddress("Y2345fitPars", ypars);
+    // TrTrack->SetBranchAddress("ecaluseflag", &useflag);
     for (int i = 0; i < std::min(TrTrack->GetEntries(), TrECAL->GetEntries()); i++)
     {
         TrTrack->GetEntry(i);
         TrECAL->GetEntry(i);
-        posHit[0] = xpars[0] * posHit[2] + xpars[1] + 4.72 - 5.04;
-        posHit[1] = ypars[0] * posHit[2] + ypars[1] + 3.14 + 4.26;
-        if (!(useflag && triggerID == trackID && ShowerX->size() == 1 && SeedID->at(0) == 326034 && Energy_5x5->at(0) > 900))
+        posHit[0] = xpars[0] * posHit[2] + xpars[1] + 7;
+        posHit[1] = ypars[0] * posHit[2] + ypars[1] + 3;
+        if (!(useflag && triggerID == trackID && ShowerX->size() == 1 && SeedID->at(0) == 326034 && Energy_5x5->at(0) > energy_cut))
             continue;
         // if (fabs(xpars[0]) < 2e-3 || fabs(ypars[0]) < 2e-3)
         //     continue;
         // if (!(fabs(posHit[0]) < 25 && fabs(posHit[1]) < 25 && (fabs(posHit[0]) > 15 || fabs(posHit[1]) > 15)))
         //     continue;
-        if (!(fabs(posHit[0]) < 25 && fabs(posHit[1]) < 25))
-            continue;
-        // if (fabs(posHit[0]) < 20 && fabs(posHit[1]) < 20)
-        // {
-        //     if (gRandom->Uniform() < 0.75)
-        //         continue;
-        // }
         // double slope = TMath::Power(TMath::Power(xpars[0], 2) + TMath::Power(ypars[0], 2), 0.5);
         // if (slope > 0.01)
         //     continue;
         // if (!(fabs(ShowerX->at(0)) < 1 && fabs(ShowerY->at(0)) < 1))
         //     continue;
+        if (!(fabs(posHit[0]) < 25 && fabs(posHit[1]) < 25))
+            continue;
+        // 让束斑更均匀
+        if (fabs(posHit[0]) < 20 && fabs(posHit[1]) < 20)
+        {
+            if (gRandom->Uniform() < 0.75)
+                continue;
+        }
         hisx->Fill(ShowerX->at(0) * 10 + posHit[0]);
         hisy->Fill(ShowerY->at(0) * 10 + posHit[1]);
         hisecal->Fill(ShowerX->at(0) * 10, ShowerY->at(0) * 10);
@@ -202,6 +205,7 @@ int main(int argc, char *argv[])
     std::string ecalfile, trackerfile;
     if (argc == 2)
     {
+        // ecalfile = Form("%s/rec_online.root", argv[1]);
         ecalfile = Form("%s/rec.root", argv[1]);
         trackerfile = Form("%s/Tracker-step4-rec.root", argv[1]);
         DrawPosition(ecalfile, trackerfile);

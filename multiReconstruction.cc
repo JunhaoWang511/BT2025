@@ -399,7 +399,7 @@ int main(int argc, char const *argv[])
           {
             HitMap[CrystalID] = rechit;
             HitID.push_back(rechit.CrystalID());
-            HitTime.push_back(rechit.Time());
+            HitTime.push_back(rechit.Time() + 817.5);
             HitEnergy.push_back(rechit.Energy());
           }
         }

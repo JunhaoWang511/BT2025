@@ -1,5 +1,5 @@
 #!/bin/bash
-# 这个脚本是对UI服务器上/ustcfs3/stcf/BT2025/目录下的束流数据进行处理
+# 这个脚本是对UI服务器上/ustcfs3/stcf/BT2025/目录下10月的束流数据进行处理
 para_num() {
     if test $# -lt 2; then
         echo "请输入至少2个参数, par1: UI服务器上数据文件夹的绝对路径; par2: runID的类型(延迟/接线); par3: 处理文件个数"

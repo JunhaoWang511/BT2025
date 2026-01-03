@@ -19,11 +19,11 @@ fi
 # 脚本所在路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 处理脚本
-PROCESS_SCRIPT=$SCRIPT_DIR/processUI.sh
+PROCESS_SCRIPT=$SCRIPT_DIR/processUI2510.sh
 
 # 判断处理脚本是否存在
 if [ ! -f $PROCESS_SCRIPT ]; then
-    echo "processUI.sh does not exist!"
+    echo "processUI2510.sh does not exist!"
     exit 1
 fi
 
