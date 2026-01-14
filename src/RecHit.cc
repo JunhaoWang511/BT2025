@@ -52,7 +52,7 @@ void RecHit::setCrystalID(const int id)
 
 void RecHit::setEnergy(const double hgamp, const double lgamp, const double ratio, const double hgsatupoint, const double hgnoise, const double lgnoise, const double hgmip, const double hgpedestal)
 {
-  if (hgamp < (hgsatupoint - 400))
+  if (hgamp < hgsatupoint)
   {
     if (hgamp < 3 * hgnoise)
       m_Energy = 0;
@@ -79,7 +79,7 @@ void RecHit::setEnergy(const double amp, double hgnoise, const double hgpedestal
 
 void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ratio, const double hgsatupoint, const double hgpedestal, const double hgnoise, const double lgpedestal, const double lgnoise, const double lgmip, const double hgmip, TRandom3 r1)
 {
-  if ((hgpeak - hgpedestal) < (hgsatupoint - 400))
+  if ((hgpeak - hgpedestal) < hgsatupoint)
   {
     m_Energy = hgpeak - hgpedestal;
     if (m_Energy < 3 * hgnoise)
@@ -99,7 +99,7 @@ void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ra
 
 void RecHit::setEnergy(const double hgpeak, const double lgpeak, const double ratio, const double hgsatupoint, const double hgnoise, const double lgpedestal, const double lgnoise, const double lgmip, const double hgmip)
 {
-  if ((hgpeak) < (hgsatupoint - 400))
+  if ((hgpeak) < hgsatupoint)
   {
     m_Energy = hgpeak;
     if (m_Energy < 3 * hgnoise)

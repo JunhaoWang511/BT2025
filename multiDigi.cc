@@ -234,13 +234,11 @@ int main(int argc, char const *argv[])
             {
                 std::copy(LGAmp + k, LGAmp + k + 20, wavetmp);
                 // 采样起始点是粗时间，拟合得到幅度和细时间(ns)
-                amptmp = std::inner_product(ampVec, ampVec + 20, wavetmp, 0);
-                // 修正拟合幅度
-                amptmp += 15;
+                amptmp = std::inner_product(ampVec, ampVec + 20, wavetmp, 0.);
                 // 如果幅度小于20或者细时间超过一个采样点间隔，认为不是一个本底/信号
                 if (amptmp < 20)
                     continue;
-                timetmp = std::inner_product(amptimeVec, amptimeVec + 20, wavetmp, 0);
+                timetmp = std::inner_product(amptimeVec, amptimeVec + 20, wavetmp, 0.);
                 timetmp /= amptmp;
                 // 这里要判断timetmp的取值范围！！
                 if (fabs(timetmp) > 6.25)
@@ -279,8 +277,8 @@ int main(int argc, char const *argv[])
                     for (int m = 0; m < _Npoints; m++)
                         gr1->SetPoint(m, 12.5 * m, LGAmp[m]);
                     gr1->Draw("ap");
-                    // if (amplitude > 200)
-                        can->SaveAs(Form("subtract_Event%i_Hit%i_Point%i.png", i, j, k));
+                    if (amplitude > 200)
+                    can->SaveAs(Form("subtract_Event%i_Hit%i_Point%i.png", i, j, k));
                 }
             }
         }
