@@ -27,7 +27,7 @@ Double_t ff(double *x, double *par)
   Double_t val = par[0] * exp(-(x[0] - par[1]) / par[2]) + par[3] * exp(-(x[0] - par[1]) / par[4]) + par[5] * exp(-(x[0] - par[1]) / par[6]) + par[7] * exp(-(x[0] - par[1]) / par[8]);
 
   if (x[0] >= par[1] && x[0] <= 3000)
-    return val * TMath::Power((x[0] - par[1]), 2);
+    return val * TMath::Power((x[0] - par[1]), par[9]);
   else
     return 0;
 }
@@ -126,7 +126,7 @@ int main(int argc, char const *argv[])
 
   Parameter &Para = Parameter::GetInstance();
 
-  TF1 *f1 = new TF1("f", ff, 0, 3000, 9);
+  TF1 *f1 = new TF1("f", ff, 0, 3000, 10);
 
   int nEntries = tree->GetEntries();
   int interval = nEntries / 20;
@@ -202,8 +202,8 @@ int main(int argc, char const *argv[])
       if ((HGMaxID < (Pstart + 10) || HGMaxID > (Pstop - 10)) && HGMaxAmp < 16000)
         IsOsc = true;
 
-      int cc = 20;
-      int dd = 10;
+      int cc = 10;
+      int dd = 12;
 
       VectorXd hgtimingvec(cc);
       VectorXd lgtimingvec(cc);
@@ -217,7 +217,7 @@ int main(int argc, char const *argv[])
       double time, amp, pedestal, chi2;
       if (Hit[k]->HighGainPeak > (Para.HGPedestal(k) + 6 * Para.HGNoise(k)) && Hit[k]->HighGainPeak < 16000 && IsOsc == false)
       {
-        for (int j = 0; j < 9; j++)
+        for (int j = 0; j < 10; j++)
           f1->SetParameter(j, Para.HGWfPara(k, j));
         f1->SetParameter(1, 0);
         OnePulseFit(cc, hgtimingvec, &time, &amp, &pedestal, &chi2, f1);
@@ -243,7 +243,7 @@ int main(int argc, char const *argv[])
 
       if (Hit[k]->LowGainPeak > (Para.LGPedestal(k) + 6 * Para.LGNoise(k)) && Hit[k]->LowGainPeak < 16000 && IsOsc == false)
       {
-        for (int j = 0; j < 9; j++)
+        for (int j = 0; j < 10; j++)
           f1->SetParameter(j, Para.LGWfPara(k, j));
         f1->SetParameter(1, 0);
         OnePulseFit(cc, lgtimingvec, &time, &amp, &pedestal, &chi2, f1);

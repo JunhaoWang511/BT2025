@@ -93,6 +93,7 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
     TH2D *hisecal = new TH2D("his3", "posecal", 40, -40, 40, 40, -40, 40);
     TH2D *histr = new TH2D("his4", "postracker", 40, -40, 40, 40, -40, 40);
     TH2D *hisres = new TH2D("his5", "posres", 40, -40, 40, 40, -40, 40);
+    TH2D *hisbeam = new TH2D("hisbeam", ";X[mm];Y[mm]", 25, -50, 50, 25, -50, 50);
     hisx->SetTitle("position resolution;#Deltax[mm];counts");
     hisy->SetTitle("position resolution;#Deltax[mm];counts");
     hisres->SetTitle("position distribution;posx[mm];posy[mm]");
@@ -112,25 +113,41 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
     // ECAL position along z axis
     double posHit[3];
     // posHit[2] = 8150;
-    // posHit[2] = 7450;
-    posHit[2] = 3250;
-    // TrTrack->SetBranchAddress("event", &trackID);
+    posHit[2] = 7450;
+    // posHit[2] = 3250;
+    TrTrack->SetBranchAddress("event", &trackID);
     TrTrack->SetBranchAddress("ecalextraHit", &trackPos);
     TrTrack->SetBranchAddress("ecaltrackVec", &trackVec);
-    TrTrack->SetBranchAddress("XfitPars", xpars);
-    TrTrack->SetBranchAddress("YfitPars", ypars);
-    TrTrack->SetBranchAddress("useflag", &useflag);
-    // TrTrack->SetBranchAddress("X2345fitPars", xpars);
-    // TrTrack->SetBranchAddress("Y2345fitPars", ypars);
-    // TrTrack->SetBranchAddress("ecaluseflag", &useflag);
+    // TrTrack->SetBranchAddress("XfitPars", xpars);
+    // TrTrack->SetBranchAddress("YfitPars", ypars);
+    // TrTrack->SetBranchAddress("useflag", &useflag);
+    TrTrack->SetBranchAddress("X2345fitPars", xpars);
+    TrTrack->SetBranchAddress("Y2345fitPars", ypars);
+    TrTrack->SetBranchAddress("ecaluseflag", &useflag);
+    double seedenergy;
     for (int i = 0; i < std::min(TrTrack->GetEntries(), TrECAL->GetEntries()); i++)
     {
         TrTrack->GetEntry(i);
         TrECAL->GetEntry(i);
-        posHit[0] = xpars[0] * posHit[2] + xpars[1] + 7;
-        posHit[1] = ypars[0] * posHit[2] + ypars[1] + 3;
-        if (!(useflag && triggerID == trackID && ShowerX->size() == 1 && SeedID->at(0) == 326034 && Energy_5x5->at(0) > energy_cut))
+        posHit[0] = xpars[0] * posHit[2] + xpars[1] + 4.42;
+        posHit[1] = ypars[0] * posHit[2] + ypars[1] + 5.18;
+        if (useflag)
+            hisbeam->Fill(posHit[0], posHit[1]);
+        // 检查触发号对齐，筛选3-3作为seed晶体
+        if (!(useflag && triggerID == trackID && ShowerX->size() == 1 && SeedID->at(0) == 326034))
             continue;
+        for (int k = 0; k < HitID->size(); k++)
+        {
+            if (HitID->at(k) == 326034)
+            {
+                seedenergy = Energy_Hit->at(k);
+                break;
+            }
+        }
+        // 筛选掉强子
+        if (seedenergy < energy_cut)
+            continue;
+
         // if (fabs(xpars[0]) < 2e-3 || fabs(ypars[0]) < 2e-3)
         //     continue;
         // if (!(fabs(posHit[0]) < 25 && fabs(posHit[1]) < 25 && (fabs(posHit[0]) > 15 || fabs(posHit[1]) > 15)))
@@ -140,19 +157,22 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
         //     continue;
         // if (!(fabs(ShowerX->at(0)) < 1 && fabs(ShowerY->at(0)) < 1))
         //     continue;
-        if (!(fabs(posHit[0]) < 25 && fabs(posHit[1]) < 25))
-            continue;
+
+        // 粒子击中位置在中间晶体
+        // if (!(fabs(posHit[0]) < 25 && fabs(posHit[1]) < 25))
+        //     continue;
         // 让束斑更均匀
-        if (fabs(posHit[0]) < 20 && fabs(posHit[1]) < 20)
-        {
-            if (gRandom->Uniform() < 0.75)
-                continue;
-        }
-        hisx->Fill(ShowerX->at(0) * 10 + posHit[0]);
+        // if (fabs(posHit[0]) < 10 && fabs(posHit[1]) < 10)
+        // {
+        //     if (gRandom->Uniform() < 0.75)
+        //         continue;
+        // }
+
+        hisx->Fill(ShowerX->at(0) * 10 - posHit[0]);
         hisy->Fill(ShowerY->at(0) * 10 + posHit[1]);
         hisecal->Fill(ShowerX->at(0) * 10, ShowerY->at(0) * 10);
-        histr->Fill(-posHit[0], -posHit[1]);
-        hisres->Fill(ShowerX->at(0) * 10 + posHit[0], ShowerY->at(0) * 10 + posHit[1]);
+        histr->Fill(posHit[0], -posHit[1]);
+        hisres->Fill(ShowerX->at(0) * 10 - posHit[0], ShowerY->at(0) * 10 + posHit[1]);
     }
     TLatex *tex = new TLatex();
     tex->SetTextAlign(20);
@@ -161,15 +181,19 @@ void DrawPosition(std::string ecalfile, std::string trackfile)
     tex->SetTextColor(kRed);
 
     TCanvas *can1 = new TCanvas("posXres", "posXres");
+    hisbeam->Draw("colz");
+    can1->SaveAs("IncidentPosition.png");
     hisx->Draw();
-    hisx->Fit("gaus", "R", "", -10, 10);
-    tex->DrawLatexNDC(0.3, 0.8, Form("#sigma=%.2f mm", hisx->GetFunction("gaus")->GetParameter(2)));
-    // can1->SaveAs(Form("posresolution_filterXY.png"));
+    // hisx->Fit("gaus", "R", "", -10, 10);
+    hisx->Fit("gaus");
+    tex->DrawLatexNDC(0.3, 0.7, Form("#sigma=%.2f mm", hisx->GetFunction("gaus")->GetParameter(2)));
+    can1->SaveAs(Form("position_resolutionX.png"));
     TCanvas *can2 = new TCanvas("posYres", "posYres");
     hisy->Draw();
-    hisy->Fit("gaus", "R", "", -10, 10);
-    tex->DrawLatexNDC(0.3, 0.8, Form("#sigma=%.2f mm", hisy->GetFunction("gaus")->GetParameter(2)));
-    // can2->SaveAs(Form("posresolution_filterXY.png"));
+    // hisy->Fit("gaus", "R", "", -10, 10);
+    hisy->Fit("gaus");
+    tex->DrawLatexNDC(0.3, 0.7, Form("#sigma=%.2f mm", hisy->GetFunction("gaus")->GetParameter(2)));
+    can2->SaveAs(Form("position_resolutionY.png"));
     TCanvas *can3 = new TCanvas("posXYecal", "posXYecal");
     hisecal->Draw("colz");
     TCanvas *can4 = new TCanvas("posXYtracker", "posXYtracker");

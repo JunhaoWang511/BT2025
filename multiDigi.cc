@@ -7,6 +7,8 @@
 #include <TProfile.h>
 #include <TTree.h>
 #include <TH1.h>
+#include <TH2.h>
+#include <TProfile.h>
 #include <TGraph.h>
 #include <TCanvas.h>
 #include <TPad.h>
@@ -208,6 +210,9 @@ int main(int argc, char const *argv[])
     tex->SetTextFont(42);
     // 作图开关选项
     bool DrawGraph = false;
+    TH1F *his_Aratio = new TH1F("his1", ";amplitude ratio;counts", 100, 0.95, 1.05);
+    TH2F *his_ATcor = new TH2F("his2", ";finetime[ns];amplitude ratio", 25, 0, 1250, 100, 0.95, 1.05);
+    TProfile *pro_ATcor;
     for (int i = 0; i < nEntries; i++)
     {
         int progress = static_cast<float>(i + 1) / nEntries * 100;
@@ -243,11 +248,16 @@ int main(int argc, char const *argv[])
                 // 这里要判断timetmp的取值范围！！
                 if (fabs(timetmp) > 6.25)
                     continue;
-                timestamp = 64 * 12.5;
+                timestamp = 65 * 12.5;
                 coarsetime = k * 12.5;
                 finetime = -timetmp * 100 + 625;
                 amplitude = amptmp;
                 mHit[j]->AddHit(timestamp, coarsetime, finetime, amplitude);
+                if (j == 12 && amplitude > 200 && (coarsetime - timestamp) > 300 && (coarsetime - timestamp) < 500)
+                {
+                    his_ATcor->Fill(finetime, amplitude / (Hit[j]->LowGainPeak - LGped[j]));
+                    his_Aratio->Fill(amplitude / (Hit[j]->LowGainPeak - Hit[j]->LowGainPedestal));
+                }
                 if (DrawGraph)
                 {
                     pad1->cd();
@@ -278,13 +288,21 @@ int main(int argc, char const *argv[])
                         gr1->SetPoint(m, 12.5 * m, LGAmp[m]);
                     gr1->Draw("ap");
                     if (amplitude > 200)
-                    can->SaveAs(Form("subtract_Event%i_Hit%i_Point%i.png", i, j, k));
+                        can->SaveAs(Form("subtract_Event%i_Hit%i_Point%i.png", i, j, k));
                 }
             }
         }
         mTree->Fill();
     }
-
+    // his_ATcor->Draw("colz");
+    // gPad->SaveAs("hisATcor.png");
+    // pro_ATcor = his_ATcor->ProfileX("fpx");
+    // pro_ATcor->GetYaxis()->SetTitle("amplitude ratio");
+    // pro_ATcor->SetErrorOption("i");
+    // pro_ATcor->Draw();
+    // gPad->SaveAs("proATcor.png");
+    // his_Aratio->Draw();
+    // gPad->SaveAs("hisAratio.png");
     fout->cd();
     mTree->Write();
     fout->Close();
